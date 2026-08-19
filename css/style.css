@@ -1,0 +1,4 @@
+/* Touch targets minimum 44px for mobile devices */
+button, input, select, a {
+  min-height: 44px;
+}
