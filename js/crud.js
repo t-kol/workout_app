@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient.js';
+import { supabase } from './supabaseclient.js';
 
 export function showWorkoutForm(dateStr, existingWorkout = null, onSuccess) {
   // Remove existing modal if any
