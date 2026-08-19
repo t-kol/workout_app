@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient.js';
+import { supabase } from './js/supabaseClient.js';
 import { showWorkoutForm, deleteWorkout } from './crud.js'; 
 
 let currentDate = new Date();
