@@ -43,18 +43,23 @@ export function showWorkoutForm(dateStr, existingWorkout = null, onSuccess) {
           <input type="text" id="crud-title" required class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-amber-500">
         </div>
 
-        <div class="grid grid-cols-3 gap-4">
+        <!-- UPDATED: 2x2 Grid for the new metrics -->
+        <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium mb-1 text-slate-300 text-center">Min</label>
+            <label class="block text-sm font-medium mb-1 text-slate-300 text-center">Duration (Min)</label>
             <input type="number" id="crud-duration" min="0" placeholder="0" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-center">
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1 text-slate-300 text-center">Km</label>
-            <input type="number" step="0.01" min="0" id="crud-distance" placeholder="0.0" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-center">
           </div>
           <div>
             <label class="block text-sm font-medium mb-1 text-slate-300 text-center">Intensity</label>
             <input type="text" id="crud-intensity" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-center" placeholder="e.g. Z2">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1 text-slate-300 text-center">Distance (Miles)</label>
+            <input type="number" step="0.01" min="0" id="crud-distance-miles" placeholder="0.0" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-center">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1 text-slate-300 text-center">Distance (Meters)</label>
+            <input type="number" min="0" id="crud-distance-meters" placeholder="0" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-center">
           </div>
         </div>
 
@@ -85,9 +90,13 @@ export function showWorkoutForm(dateStr, existingWorkout = null, onSuccess) {
     document.getElementById('crud-discipline').value = existingWorkout.discipline;
     document.getElementById('crud-slot').value = existingWorkout.session_slot;
     document.getElementById('crud-title').value = existingWorkout.title;
-    document.getElementById('crud-duration').value = existingWorkout.planned_duration_min || '';
-    document.getElementById('crud-distance').value = existingWorkout.planned_distance_km || '';
+    
+    // UPDATED: Pre-filling fields mapped to the new DB columns
+    document.getElementById('crud-duration').value = existingWorkout.planned_duration_mins || '';
+    document.getElementById('crud-distance-miles').value = existingWorkout.planned_distance_miles || '';
+    document.getElementById('crud-distance-meters').value = existingWorkout.planned_distance_meters || '';
     document.getElementById('crud-intensity').value = existingWorkout.planned_intensity || '';
+    
     document.getElementById('crud-description').value = existingWorkout.description || '';
     document.getElementById('crud-notes').value = existingWorkout.notes || '';
   }
@@ -104,14 +113,18 @@ export function showWorkoutForm(dateStr, existingWorkout = null, onSuccess) {
     btn.textContent = 'Saving...';
     errEl.classList.add('hidden');
 
+    // UPDATED: Payload keys mapping precisely to your new schema
     const payload = {
       date: dateStr,
       discipline: document.getElementById('crud-discipline').value,
       session_slot: document.getElementById('crud-slot').value || 'WO1',
       title: document.getElementById('crud-title').value,
-      planned_duration_min: document.getElementById('crud-duration').value ? parseInt(document.getElementById('crud-duration').value) : null,
-      planned_distance_km: document.getElementById('crud-distance').value ? parseFloat(document.getElementById('crud-distance').value) : null,
+      
+      planned_duration_mins: document.getElementById('crud-duration').value ? parseInt(document.getElementById('crud-duration').value) : null,
+      planned_distance_miles: document.getElementById('crud-distance-miles').value ? parseFloat(document.getElementById('crud-distance-miles').value) : null,
+      planned_distance_meters: document.getElementById('crud-distance-meters').value || null, // Using text/string as fallback per your schema rules
       planned_intensity: document.getElementById('crud-intensity').value || null,
+      
       description: document.getElementById('crud-description').value || null,
       notes: document.getElementById('crud-notes').value || null,
     };

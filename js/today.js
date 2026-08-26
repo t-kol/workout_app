@@ -84,7 +84,6 @@ async function loadSessions() {
   const listEl = document.getElementById('sessions-container');
 
   try {
-    // UPDATED: Removed the join to workout_logs, querying workouts directly
     const { data: workouts, error } = await supabase
       .from('workouts')
       .select('*')
@@ -114,20 +113,40 @@ function renderSessions(workouts) {
   listEl.innerHTML = '';
 
   workouts.forEach((workout) => {
-    const config = DISCIPLINE_CONFIG[workout.discipline] || DISCIPLINE_CONFIG.other;
+    // Normalizing discipline in case of casing differences in the DB
+    const disciplineKey = (workout.discipline || '').toLowerCase();
+    const config = DISCIPLINE_CONFIG[disciplineKey] || DISCIPLINE_CONFIG.other;
     
-    // UPDATED: Check completion status directly from the workout row
     const isCompleted = workout.completed === true;
 
     const card = document.createElement('div');
     card.className = `bg-slate-800 rounded-xl border p-4 space-y-2 transition ${config.color.split(' ')[0]}`;
 
-    // UPDATED: Replaced old metric variables with your new schema columns
     const plannedMetrics = [];
-    if (workout.planned_duration_mins) plannedMetrics.push(`${workout.planned_duration_mins}m`);
-    if (workout.planned_distance_miles) plannedMetrics.push(`${workout.planned_distance_miles} mi`);
-    if (workout.planned_distance_meters) plannedMetrics.push(`${workout.planned_distance_meters}m`);
+    
+    // Apply rules based on discipline schema differences
+    if (disciplineKey === 'swim') {
+      if (workout.planned_distance_meters) {
+        plannedMetrics.push(`${workout.planned_distance_meters}m`);
+      }
+    } else {
+      if (workout.planned_distance_miles) {
+        plannedMetrics.push(`${workout.planned_distance_miles} mi`);
+      }
+      if (workout.planned_duration_mins) {
+        // Changed "m" to "min" so it doesn't get confused with meters visually
+        plannedMetrics.push(`${workout.planned_duration_mins} min`);
+      }
+    }
+
     if (workout.planned_intensity) plannedMetrics.push(workout.planned_intensity);
+
+    // Helper checks to know when to render the "No details provided" empty state 
+    const hasDescription = !!workout.description;
+    const hasNotes = !!workout.notes;
+    const hasActualDistance = !!workout.actual_distance;
+    const hasActualTime = !!workout.actual_time;
+    const hasAnyDetails = hasDescription || hasNotes || hasActualDistance || hasActualTime;
 
     card.innerHTML = `
       <div class="flex items-center justify-between gap-3">
@@ -151,9 +170,14 @@ function renderSessions(workouts) {
       </div>
 
       <div class="details-panel hidden pt-3 border-t border-slate-700/50 text-sm text-slate-300 space-y-2">
-        ${workout.description ? `<div><span class="text-xs text-slate-400 block font-semibold">Description</span>${workout.description}</div>` : ''}
-        ${workout.notes ? `<div><span class="text-xs text-slate-400 block font-semibold">Planned Notes</span>${workout.notes}</div>` : ''}
-        ${!workout.description && !workout.notes ? '<div class="text-xs text-slate-500 italic">No additional details provided.</div>' : ''}
+        ${hasDescription ? `<div><span class="text-xs text-slate-400 block font-semibold">Description</span>${workout.description}</div>` : ''}
+        ${hasNotes ? `<div><span class="text-xs text-slate-400 block font-semibold">Planned Notes</span>${workout.notes}</div>` : ''}
+        
+        <!-- Displaying newly added Actuals if they exist -->
+        ${hasActualDistance ? `<div><span class="text-xs text-emerald-400 block font-semibold">Actual Distance</span>${workout.actual_distance}</div>` : ''}
+        ${hasActualTime ? `<div><span class="text-xs text-emerald-400 block font-semibold">Actual Time</span>${workout.actual_time}</div>` : ''}
+        
+        ${!hasAnyDetails ? '<div class="text-xs text-slate-500 italic">No additional details provided.</div>' : ''}
         
         <!-- CRUD Buttons -->
         <div class="mt-4 pt-3 border-t border-slate-700/50 flex space-x-3">
@@ -178,7 +202,6 @@ function renderSessions(workouts) {
       }
 
       try {
-        // UPDATED: We now just update the 'completed' column on the workouts table directly
         const { error } = await supabase
           .from('workouts')
           .update({ completed: isChecked })
@@ -199,7 +222,6 @@ function renderSessions(workouts) {
           titleEl.classList.remove('line-through', 'text-slate-400');
         }
         
-        // Exposing the exact error message to make debugging easier
         alert(`Could not update workout status: ${err.message || "Unknown error"}`);
       }
     });
