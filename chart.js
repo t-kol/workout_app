@@ -7,17 +7,28 @@ export function initStatistics() {
   let loaded = false;
   const status = document.getElementById('mileage-status');
   const refresh = document.getElementById('refresh-mileage');
+  const sportSelect = document.getElementById('mileage-sport');
+  const sports = {
+    running: { label: 'Running', noun: 'runs', color: '#f59e0b' },
+    cycling: { label: 'Cycling', noun: 'rides', color: '#34d399' },
+    swimming: { label: 'Swimming', noun: 'swims', color: '#818cf8' },
+  };
   const format = date => new Date(`${date}T12:00:00`).toLocaleDateString(undefined, {
     month: 'short', day: 'numeric', year: 'numeric',
   });
   async function load() {
     if (loading) return;
     loading = true;
+    const activityType = sportSelect.value;
+    const sport = sports[activityType];
+    sportSelect.disabled = true;
     refresh.disabled = true;
+    document.getElementById('mileage-title').textContent = `Weekly ${sport.label.toLowerCase()} mileage`;
+    document.getElementById('myChart').setAttribute('aria-label', `Weekly ${sport.label.toLowerCase()} miles and 52-week average`);
     document.getElementById('mileage-chart-container').hidden = true;
     document.getElementById('mileage-details').hidden = true;
     document.getElementById('mileage-summary').textContent = '';
-    status.textContent = 'Loading Garmin running history…';
+    status.textContent = `Loading Garmin ${sport.label.toLowerCase()} history…`;
     try {
       const weeks = completedWeeks();
       const activities = [];
@@ -25,7 +36,7 @@ export function initStatistics() {
       const seenPages = new Set();
       while (true) {
         const { data, error } = await supabase.functions.invoke('garmin_sync', {
-          body: { mode: 'activities', start, startDate: weeks[0].start, endDate: weeks.at(-1).end },
+          body: { mode: 'activities', activityType, start, startDate: weeks[0].start, endDate: weeks.at(-1).end },
         });
         if (error) {
           let message = error.message;
@@ -35,7 +46,7 @@ export function initStatistics() {
           }
           throw new Error(message);
         }
-        if (data?.version !== 2 || !Array.isArray(data.activities)) {
+        if (data?.version !== 3 || data.activityType !== activityType || !Array.isArray(data.activities)) {
           throw new Error('Deploy the updated garmin_sync function from supabase/functions/garmin_sync/index.ts, then refresh.');
         }
         if (!data.activities.length) break;
@@ -44,7 +55,7 @@ export function initStatistics() {
         seenPages.add(signature);
         activities.push(...data.activities);
         start += data.activities.length;
-        status.textContent = `Loading history… ${start} running activities received.`;
+        status.textContent = `Loading history… ${start} ${sport.label.toLowerCase()} activities received.`;
         // Continue until an empty page, even if Garmin caps the requested page size.
         if (seenPages.size >= 200) throw new Error('History exceeded the page limit.');
       }
@@ -57,7 +68,7 @@ export function initStatistics() {
         data: {
           labels: weeks.map(w => format(w.start)),
           datasets: [
-            { label: 'Running miles', data: result.miles, backgroundColor: '#f59e0b', borderRadius: 3 },
+            { label: `${sport.label} miles`, data: result.miles, backgroundColor: sport.color, borderRadius: 3 },
             { type: 'line', label: '52-week average', data: weeks.map(() => result.average),
               borderColor: '#38bdf8', borderDash: [6, 4], borderWidth: 2, pointRadius: 0 },
           ],
@@ -80,7 +91,7 @@ export function initStatistics() {
         },
       });
       document.getElementById('mileage-summary').textContent = `${result.average.toFixed(1)} mi / week average`;
-      status.textContent = `${format(weeks[0].start)} – ${format(weeks.at(-1).end)} · ${result.count} runs · ${result.total.toFixed(1)} miles. Includes zero-mile weeks; excludes this partial week.${result.count ? '' : ' No running activities returned by Garmin.'}`;
+      status.textContent = `${format(weeks[0].start)} – ${format(weeks.at(-1).end)} · ${result.count} ${sport.noun} · ${result.total.toFixed(1)} miles. Includes zero-mile weeks; excludes this partial week.${result.count ? '' : ` No ${sport.label.toLowerCase()} activities returned by Garmin.`}`;
       const rows = document.getElementById('mileage-rows');
       rows.replaceChildren(...weeks.map((week, i) => {
         const row = document.createElement('tr');
@@ -101,8 +112,10 @@ export function initStatistics() {
     } finally {
       loading = false;
       refresh.disabled = false;
+      sportSelect.disabled = false;
     }
   }
   document.getElementById('tab-statistics').addEventListener('click', () => { if (!loaded) load(); });
   refresh.addEventListener('click', load);
+  sportSelect.addEventListener('change', () => { loaded = false; load(); });
 }

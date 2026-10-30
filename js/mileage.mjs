@@ -20,7 +20,7 @@ export function summarizeMileage(activities, weeks) {
     if (activity.activityId == null) { invalid++; continue; }
     if (seen.has(String(activity.activityId))) continue;
     seen.add(String(activity.activityId));
-    // The server filters Garmin search to running and its subtypes.
+    // The server filters Garmin search to the selected sport and its subtypes.
     const day = activity.startTimeLocal?.slice(0, 10);
     const distance = activity.distance;
     if (!day || !/^\d{4}-\d{2}-\d{2}$/.test(day) || typeof distance !== 'number' || !Number.isFinite(distance) || distance < 0) {
