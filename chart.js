@@ -8,6 +8,7 @@ export function initStatistics() {
   const status = document.getElementById('mileage-status');
   const refresh = document.getElementById('refresh-mileage');
   const sportSelect = document.getElementById('mileage-sport');
+  const rangeSelect = document.getElementById('mileage-range');
   const sports = {
     running: { label: 'Running', noun: 'runs', color: '#f59e0b' },
     cycling: { label: 'Cycling', noun: 'rides', color: '#34d399' },
@@ -21,16 +22,19 @@ export function initStatistics() {
     loading = true;
     const activityType = sportSelect.value;
     const sport = sports[activityType];
+    const weekCount = Number(rangeSelect.value);
+    rangeSelect.disabled = true;
     sportSelect.disabled = true;
     refresh.disabled = true;
     document.getElementById('mileage-title').textContent = `Weekly ${sport.label.toLowerCase()} mileage`;
-    document.getElementById('myChart').setAttribute('aria-label', `Weekly ${sport.label.toLowerCase()} miles and 52-week average`);
+    document.getElementById('mileage-range-description').textContent = `Last ${weekCount} completed ${weekCount === 1 ? 'week' : 'weeks'} · Sunday–Saturday`;
+    document.getElementById('myChart').setAttribute('aria-label', `Weekly ${sport.label.toLowerCase()} miles and ${weekCount}-week average`);
     document.getElementById('mileage-chart-container').hidden = true;
     document.getElementById('mileage-details').hidden = true;
     document.getElementById('mileage-summary').textContent = '';
     status.textContent = `Loading Garmin ${sport.label.toLowerCase()} history…`;
     try {
-      const weeks = completedWeeks();
+      const weeks = completedWeeks(new Date(), weekCount);
       const activities = [];
       let start = 0;
       const seenPages = new Set();
@@ -69,8 +73,8 @@ export function initStatistics() {
           labels: weeks.map(w => format(w.start)),
           datasets: [
             { label: `${sport.label} miles`, data: result.miles, backgroundColor: sport.color, borderRadius: 3 },
-            { type: 'line', label: '52-week average', data: weeks.map(() => result.average),
-              borderColor: '#38bdf8', borderDash: [6, 4], borderWidth: 2, pointRadius: 0 },
+            { type: 'line', label: `${weekCount}-week average`, data: weeks.map(() => result.average),
+              borderColor: '#38bdf8', borderDash: [6, 4], borderWidth: 2, pointRadius: weekCount === 1 ? 5 : 0 },
           ],
         },
         options: {
@@ -113,9 +117,11 @@ export function initStatistics() {
       loading = false;
       refresh.disabled = false;
       sportSelect.disabled = false;
+      rangeSelect.disabled = false;
     }
   }
   document.getElementById('tab-statistics').addEventListener('click', () => { if (!loaded) load(); });
   refresh.addEventListener('click', load);
   sportSelect.addEventListener('change', () => { loaded = false; load(); });
+  rangeSelect.addEventListener('change', () => { loaded = false; load(); });
 }

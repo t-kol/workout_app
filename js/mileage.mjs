@@ -2,11 +2,14 @@ const DAY = 86400000;
 const iso = date => date.toISOString().slice(0, 10);
 
 // Use local today, then UTC calendar arithmetic to avoid daylight-saving shifts.
-export function completedWeeks(now = new Date()) {
+export function completedWeeks(now = new Date(), weekCount = 52) {
+  if (!Number.isInteger(weekCount) || weekCount < 1 || weekCount > 52) {
+    throw new RangeError('Choose between 1 and 52 completed weeks.');
+  }
   const sunday = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
   sunday.setUTCDate(sunday.getUTCDate() - sunday.getUTCDay());
-  return Array.from({ length: 52 }, (_, i) => {
-    const start = new Date(sunday.getTime() - (52 - i) * 7 * DAY);
+  return Array.from({ length: weekCount }, (_, i) => {
+    const start = new Date(sunday.getTime() - (weekCount - i) * 7 * DAY);
     return { start: iso(start), end: iso(new Date(start.getTime() + 6 * DAY)) };
   });
 }

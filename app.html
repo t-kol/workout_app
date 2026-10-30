@@ -30,15 +30,23 @@
       <section class="bg-slate-800 border border-slate-700 rounded-xl p-4" aria-labelledby="mileage-title">
         <div class="flex items-start justify-between gap-3">
           <div><h2 id="mileage-title" class="text-lg font-semibold">Weekly running mileage</h2>
-          <p class="text-sm text-slate-400">Last 52 completed weeks · Sunday–Saturday</p></div>
+          <p id="mileage-range-description" class="text-sm text-slate-400">Last 52 completed weeks · Sunday–Saturday</p></div>
           <button id="refresh-mileage" class="px-3 text-sm rounded bg-slate-700 hover:bg-slate-600">Refresh</button>
         </div>
-        <div class="mt-4">
+        <div class="mt-4 flex flex-wrap items-center gap-2">
           <label for="mileage-sport" class="text-sm text-slate-300 mr-2">Sport</label>
           <select id="mileage-sport" class="bg-slate-900 border border-slate-600 rounded px-3 py-2 text-slate-100">
             <option value="running" selected>Running</option>
             <option value="cycling">Cycling</option>
             <option value="swimming">Swimming</option>
+          </select>
+          <label for="mileage-range" class="text-sm text-slate-300 sm:ml-3">Date range</label>
+          <select id="mileage-range" class="bg-slate-900 border border-slate-600 rounded px-3 py-2 text-slate-100">
+            <option value="52" selected>1 year</option>
+            <option value="26">6 months</option>
+            <option value="13">3 months</option>
+            <option value="4">1 month</option>
+            <option value="1">1 week</option>
           </select>
         </div>
         <p id="mileage-summary" class="text-amber-400 text-xl font-semibold mt-4"></p>
