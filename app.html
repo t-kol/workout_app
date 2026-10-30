@@ -27,15 +27,32 @@
     <div id="view-today" role="tabpanel" class="tab-view"></div>
     <div id="view-calendar" role="tabpanel" class="tab-view hidden"><p class="text-slate-400 text-center py-8">Calendar View Coming Soon</p></div>
     <div id="view-statistics" role="tabpanel" class="tab-view hidden">
-      <div class="relative h-64 sm:h-80 w-full">
-        <canvas id="myChart"></canvas>
-      </div>
+      <section class="bg-slate-800 border border-slate-700 rounded-xl p-4" aria-labelledby="mileage-title">
+        <div class="flex items-start justify-between gap-3">
+          <div><h2 id="mileage-title" class="text-lg font-semibold">Weekly running mileage</h2>
+          <p class="text-sm text-slate-400">Last 52 completed weeks · Sunday–Saturday</p></div>
+          <button id="refresh-mileage" class="px-3 text-sm rounded bg-slate-700 hover:bg-slate-600">Refresh</button>
+        </div>
+        <p id="mileage-summary" class="text-amber-400 text-xl font-semibold mt-4"></p>
+        <p id="mileage-status" role="status" aria-live="polite" class="text-sm text-slate-400 mt-2">Open Statistics to load Garmin activities.</p>
+        <div id="mileage-chart-container" class="relative h-64 sm:h-80 w-full mt-4" hidden>
+          <canvas id="myChart" role="img" aria-label="Weekly running miles and 52-week average"></canvas>
+        </div>
+        <details id="mileage-details" class="mt-4 text-sm" hidden>
+          <summary class="cursor-pointer">View weekly distances</summary>
+          <div class="max-h-64 overflow-auto mt-2"><table class="w-full text-left">
+            <caption class="sr-only">Sunday through Saturday running mileage</caption>
+            <thead><tr><th scope="col">Week</th><th scope="col">Miles</th></tr></thead><tbody id="mileage-rows"></tbody>
+          </table></div>
+        </details>
+      </section>
     </div>  
   </main>
 
   <script type="module">
     import { logout, checkAuthRedirect } from './js/auth.js';
     import { initTodayView } from './js/today.js';
+    import { initStatistics } from './chart.js';
 
     document.addEventListener('DOMContentLoaded', async () => {
       const session = await checkAuthRedirect();
@@ -44,6 +61,7 @@
       }
 
       document.getElementById('logout-btn').addEventListener('click', logout);
+      initStatistics();
 
       // Tab Switcher
       const tabBtns = document.querySelectorAll('.tab-btn');
