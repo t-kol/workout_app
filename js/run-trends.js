@@ -4,20 +4,13 @@ import { runPoints, formatPace } from './run-metrics.mjs';
 
 export function initRunTrends() {
   const range = document.getElementById('run-trends-range');
-  const overlay = document.getElementById('run-trends-pace');
   const refresh = document.getElementById('refresh-run-trends');
   const status = document.getElementById('run-trends-status');
   const container = document.getElementById('run-trends-container');
-  let chart, loading = false, loaded = false;
+  let charts = [], loading = false, loaded = false;
   const dateLabel = value => new Date(value).toLocaleDateString(undefined, {
     timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric',
   });
-  function updateOverlay() {
-    if (!chart) return;
-    chart.data.datasets[1].hidden = !overlay.checked;
-    chart.options.scales.pace.display = overlay.checked;
-    chart.update();
-  }
   async function load() {
     if (loading) return;
     loading = true;
@@ -50,13 +43,18 @@ export function initRunTrends() {
         if (pages.size >= 200) throw new Error('History exceeded the page limit. Choose a shorter range.');
       }
       const points = runPoints(activities, startDate, endDate);
-      chart?.destroy();
+      charts.forEach(chart => chart.destroy());
+      charts = [];
       container.hidden = false;
-      chart = new Chart(document.getElementById('run-trends-chart'), {
+      document.getElementById('run-cadence-empty').hidden = points.cadence.length > 0;
+      document.getElementById('run-pace-empty').hidden = points.pace.length > 0;
+      for (const metric of ['cadence', 'pace']) {
+        const isPace = metric === 'pace';
+        const color = isPace ? '#38bdf8' : '#f59e0b';
+        charts.push(new Chart(document.getElementById(isPace ? 'run-pace-chart' : 'run-trends-chart'), {
         type: 'scatter',
         data: { datasets: [
-          { label: 'Average cadence', data: points.cadence, yAxisID: 'cadence', backgroundColor: '#f59e0b', pointRadius: 4, pointHoverRadius: 6, showLine: false },
-          { label: 'Average pace', data: points.pace, yAxisID: 'pace', backgroundColor: '#38bdf8', pointStyle: 'rectRot', pointRadius: 4, pointHoverRadius: 6, showLine: false, hidden: !overlay.checked },
+          { label: isPace ? 'Average pace' : 'Average cadence', data: points[metric], backgroundColor: color, pointRadius: 4, pointHoverRadius: 6, showLine: false },
         ] },
         options: {
           responsive: true, maintainAspectRatio: false,
@@ -64,20 +62,20 @@ export function initRunTrends() {
             legend: { labels: { color: '#cbd5e1' }, onClick: () => {} },
             tooltip: { callbacks: {
               title: items => `${dateLabel(items[0].raw.x)} · ${items[0].raw.name}`,
-              label: item => item.dataset.yAxisID === 'pace' ? `Average pace: ${formatPace(item.parsed.y)} min/mi` : `Average cadence: ${item.parsed.y.toFixed(1)} steps/min`,
+              label: item => isPace ? `Average pace: ${formatPace(item.parsed.y)} min/mi` : `Average cadence: ${item.parsed.y.toFixed(1)} steps/min`,
             } },
           },
           scales: {
             x: { type: 'linear', min: Date.parse(`${startDate}T00:00:00Z`), max: Date.parse(`${endDate}T23:59:59Z`),
               ticks: { maxTicksLimit: 5, maxRotation: 0, color: '#94a3b8', callback: dateLabel }, grid: { color: '#334155' } },
-            cadence: { type: 'linear', position: 'left', title: { display: true, text: 'Cadence (steps/min)', color: '#f59e0b' }, ticks: { color: '#f59e0b' }, grid: { color: '#334155' } },
-            pace: { type: 'linear', position: 'right', display: overlay.checked, reverse: true,
-              title: { display: true, text: 'Pace (min/mile) · faster ↑', color: '#38bdf8' },
-              ticks: { color: '#38bdf8', callback: formatPace }, grid: { drawOnChartArea: false } },
+            y: { type: 'linear', position: 'left', reverse: isPace,
+              title: { display: true, text: isPace ? 'Pace (min/mile) · faster ↑' : 'Cadence (steps/min)', color },
+              ticks: { color, ...(isPace ? { callback: formatPace } : {}) }, grid: { color: '#334155' } },
           },
         },
-      });
-      status.textContent = `${dateLabel(Date.parse(startDate))} – ${dateLabel(Date.parse(endDate))} · ${points.runs} runs · ${points.cadence.length} cadence readings · ${points.pace.length} pace readings. Missing values are omitted. Uses completed Sunday–Saturday weeks; excludes this partial week.${points.invalidDates ? ` ${points.invalidDates} records omitted for invalid dates.` : ''}${!points.runs ? ' No runs found.' : !points.cadence.length ? ' Garmin returned no cadence for these runs; enable the pace overlay to see available pace.' : ''}`;
+        }));
+      }
+      status.textContent = `${dateLabel(Date.parse(startDate))} – ${dateLabel(Date.parse(endDate))} · ${points.runs} runs · ${points.cadence.length} cadence readings · ${points.pace.length} pace readings. Missing values are omitted. Uses completed Sunday–Saturday weeks; excludes this partial week.${points.invalidDates ? ` ${points.invalidDates} records omitted for invalid dates.` : ''}${!points.runs ? ' No runs found.' : ''}`;
       loaded = true;
     } catch (error) {
       loaded = false;
@@ -91,5 +89,4 @@ export function initRunTrends() {
   document.getElementById('tab-statistics').addEventListener('click', () => { if (!loaded) load(); });
   range.addEventListener('change', () => { loaded = false; load(); });
   refresh.addEventListener('click', load);
-  overlay.addEventListener('change', updateOverlay);
 }

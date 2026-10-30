@@ -74,11 +74,19 @@
             <option value="52" selected>1 year</option><option value="26">6 months</option>
             <option value="13">3 months</option><option value="4">1 month</option><option value="1">1 week</option>
           </select>
-          <label class="flex items-center gap-2 text-sm"><input id="run-trends-pace" type="checkbox"> Overlay average pace</label>
         </div>
         <p id="run-trends-status" role="status" aria-live="polite" class="text-sm text-slate-400 mt-3">Open Statistics to load running trends.</p>
-        <div id="run-trends-container" class="relative h-80 w-full mt-4" hidden>
-          <canvas id="run-trends-chart" role="img" aria-label="Average cadence per run, with optional average pace overlay"></canvas>
+        <div id="run-trends-container" class="mt-4 space-y-6" hidden>
+          <div>
+            <h3 class="font-semibold text-amber-400">Average cadence per run</h3>
+            <p id="run-cadence-empty" class="text-sm text-slate-400" hidden>No cadence readings for this range.</p>
+            <div class="relative h-64 sm:h-80 w-full mt-2"><canvas id="run-trends-chart" role="img" aria-label="Average cadence per run in steps per minute"></canvas></div>
+          </div>
+          <div>
+            <h3 class="font-semibold text-sky-400">Average pace per run</h3>
+            <p id="run-pace-empty" class="text-sm text-slate-400" hidden>No pace readings for this range.</p>
+            <div class="relative h-64 sm:h-80 w-full mt-2"><canvas id="run-pace-chart" role="img" aria-label="Average pace per run in minutes per mile"></canvas></div>
+          </div>
         </div>
       </section>
     </div>
