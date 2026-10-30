@@ -62,6 +62,34 @@
           </table></div>
         </details>
       </section>
+      <section class="bg-slate-800 border border-slate-700 rounded-xl p-4 mt-6" aria-labelledby="hr-title">
+        <h2 id="hr-title" class="text-lg font-semibold">Pace-adjusted heart rate</h2>
+        <p class="text-sm text-slate-400">Uses the running date range below. Model estimates from activity averages, not steady-state FIT samples.</p>
+        <div id="hr-filters" class="grid grid-cols-2 gap-3 mt-4 text-sm">
+          <label>Environment<select id="hr-environment" class="block bg-slate-900 p-2 w-full"><option value="outdoor">Outdoor</option><option value="treadmill">Treadmill</option></select></label>
+          <label>Minimum minutes<input id="hr-minutes" type="number" min="0" value="20" class="block bg-slate-900 p-2 w-full"></label>
+          <label>Minimum miles<input id="hr-distance-min" type="number" min="0" step="0.1" value="0" class="block bg-slate-900 p-2 w-full"></label>
+          <label>Maximum miles<input id="hr-distance-max" type="number" min="0" step="0.1" placeholder="No limit" class="block bg-slate-900 p-2 w-full"></label>
+          <label>Minimum runs<input id="hr-count" type="number" min="20" value="20" class="block bg-slate-900 p-2 w-full"></label>
+          <label><input id="hr-trail" type="checkbox" checked> Exclude trail</label>
+          <label><input id="hr-race" type="checkbox" checked> Exclude races</label>
+          <label><input id="hr-intervals" type="checkbox" checked> Exclude intervals/tempo</label>
+        </div>
+        <p class="text-xs text-slate-400 mt-2">Race and interval flags use activity names and may miss workouts. Review individual exclusions below. Identifiable pauses over 10% are excluded; runs without moving duration are excluded.</p>
+        <p id="hr-status" role="status" aria-live="polite" class="mt-3 text-sm">Open Statistics to load runs.</p>
+        <details class="mt-3 text-sm"><summary>Exclude individual runs</summary><div id="hr-exclusions" class="max-h-48 overflow-auto"></div></details>
+        <div id="hr-results" hidden>
+          <label class="block text-sm mt-4">Reference pace <select id="hr-reference" class="bg-slate-900 p-2"></select></label>
+          <p id="hr-summary" class="text-amber-400 mt-3"></p>
+          <p id="hr-quality" class="text-sm text-slate-400 mt-2"></p>
+          <h3 class="font-semibold mt-4">Estimated HR at a fixed pace</h3>
+          <div class="relative h-80 mt-2"><canvas id="hr-adjusted-chart" role="img" aria-label="Model-estimated heart rate trend and adjusted run observations"></canvas></div>
+          <h3 class="font-semibold mt-4">Measured HR vs. moving pace</h3>
+          <p class="text-xs text-slate-400">Earlier runs are blue; later runs are amber.</p>
+          <div class="relative h-80 mt-2"><canvas id="hr-pace-chart" role="img" aria-label="Heart rate versus pace, colored by date"></canvas></div>
+        </div>
+        <p class="text-xs text-slate-400 mt-4">Observational comparison, not a measure of VO₂max or proof of training effects. Hills, heat, fatigue and workout intensity are not controlled. Whole-week bootstrap intervals estimate uncertainty; limited data or influential runs weaken interpretation.</p>
+      </section>
       <section class="bg-slate-800 border border-slate-700 rounded-xl p-4 mt-6" aria-labelledby="run-trends-title">
         <div class="flex justify-between items-start gap-3">
           <div><h2 id="run-trends-title" class="text-lg font-semibold">Running cadence &amp; pace</h2>

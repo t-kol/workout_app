@@ -1,8 +1,10 @@
 import { supabase } from './supabaseclient.js';
 import { completedWeeks } from './mileage.mjs';
 import { runPoints, formatPace } from './run-metrics.mjs';
+import { initHRAnalysis } from './hr-analysis.js';
 
 export function initRunTrends() {
+  const hrAnalysis = initHRAnalysis();
   const range = document.getElementById('run-trends-range');
   const refresh = document.getElementById('refresh-run-trends');
   const status = document.getElementById('run-trends-status');
@@ -17,6 +19,7 @@ export function initRunTrends() {
     range.disabled = refresh.disabled = true;
     container.hidden = true;
     status.textContent = 'Loading running cadence and pace…';
+    hrAnalysis.loading();
     try {
       const weeks = completedWeeks(new Date(), Number(range.value));
       const startDate = weeks[0].start, endDate = weeks.at(-1).end;
@@ -43,6 +46,7 @@ export function initRunTrends() {
         if (pages.size >= 200) throw new Error('History exceeded the page limit. Choose a shorter range.');
       }
       const points = runPoints(activities, startDate, endDate);
+      hrAnalysis.setRuns(activities, startDate, endDate);
       charts.forEach(chart => chart.destroy());
       charts = [];
       container.hidden = false;
@@ -81,6 +85,7 @@ export function initRunTrends() {
       loaded = false;
       container.hidden = true;
       status.textContent = `Could not load running trends: ${error.message}`;
+      hrAnalysis.error(error.message);
     } finally {
       loading = false;
       range.disabled = refresh.disabled = false;
